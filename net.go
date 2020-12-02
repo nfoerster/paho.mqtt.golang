@@ -108,15 +108,14 @@ type inbound struct {
 // If there are any issues with the network connection then the returned cahnnel will be closed and the goroutine will exit
 // (so closing the connection will terminate the goroutine)
 func startIncoming(conn io.Reader) <-chan inbound {
-	var err error
-	var cp packets.ControlPacket
 	ibound := make(chan inbound)
 
 	DEBUG.Println(NET, "incoming started")
 
 	go func() {
 		for {
-			if cp, err = packets.ReadPacket(conn); err != nil {
+			cp, err := packets.ReadPacket(conn)
+			if err != nil {
 				// We do not want to log the error if it is due to the network connection having been closed
 				// elsewhere (i.e. after sending DisconnectPacket). Detecting this situation is the subject of
 				// https://github.com/golang/go/issues/4373
@@ -127,6 +126,14 @@ func startIncoming(conn io.Reader) <-chan inbound {
 				DEBUG.Println(NET, "incoming complete")
 				return
 			}
+			//handle regular disconnect
+			_, ok := cp.(*packets.DisconnectPacket)
+			if ok {
+				DEBUG.Println(NET, "disconnect received")
+				close(ibound)
+				return
+			}
+
 			DEBUG.Println(NET, "startIncoming Received Message")
 			ibound <- inbound{cp: cp}
 		}
