@@ -166,7 +166,7 @@ func startIncomingComms(conn io.Reader,
 		for {
 			if inboundFromStore == nil && ibound == nil {
 				close(output)
-				DEBUG.Println(NET, "startIncomingComms goroutine complete")
+				DEBUG.Println(CLI, "startIncomingComms goroutine complete")
 				return // As soon as ibound is closed we can exit (should have already processed an error)
 			}
 			DEBUG.Println(NET, "logic waiting for msg on ibound")
@@ -176,14 +176,14 @@ func startIncomingComms(conn io.Reader,
 			select {
 			case msg, ok = <-inboundFromStore:
 				if !ok {
-					DEBUG.Println(NET, "startIncomingComms: inboundFromStore complete")
+					DEBUG.Println(CLI, "startIncomingComms: inboundFromStore complete")
 					inboundFromStore = nil // should happen quickly as this is only for persisted messages
 					continue
 				}
 				DEBUG.Println(NET, "startIncomingComms: got msg from store")
 			case ibMsg, ok := <-ibound:
 				if !ok {
-					DEBUG.Println(NET, "startIncomingComms: ibound complete")
+					DEBUG.Println(CLI, "startIncomingComms: ibound complete")
 					ibound = nil
 					continue
 				}
