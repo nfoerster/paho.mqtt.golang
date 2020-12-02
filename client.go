@@ -119,7 +119,7 @@ type client struct {
 	workers      sync.WaitGroup // used to wait for workers to complete (ping, keepalive, errwatch, resume)
 	commsStopped chan struct{}  // closed when the comms routines have stopped (kept running until after workers have closed to avoid deadlocks)
 
-	inboundFromStore chan packets.ControlPacket
+	//inboundFromStore chan packets.ControlPacket
 }
 
 // NewClient will create an MQTT v3.1.1 client with all of the options specified
@@ -265,11 +265,11 @@ func (c *client) Connect() Token {
 			t.setError(err)
 			return
 		}
-		c.inboundFromStore = make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaitring processing
-		if c.startCommsWorkers(conn, c.inboundFromStore) {
+		inboundFromStore := make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaitring processing
+		if c.startCommsWorkers(conn, inboundFromStore) {
 			// Take care of any messages in the store
 			if !c.options.CleanSession {
-				c.resume(c.options.ResumeSubs, c.inboundFromStore)
+				c.resume(c.options.ResumeSubs, inboundFromStore)
 			} else {
 				c.persist.Reset()
 			}
@@ -277,7 +277,7 @@ func (c *client) Connect() Token {
 			WARN.Println(CLI, "Connect() called but connection established in another goroutine")
 		}
 
-		close(c.inboundFromStore)
+		close(inboundFromStore)
 		t.flowComplete()
 		DEBUG.Println(CLI, "exit startClient")
 	}()
@@ -325,11 +325,11 @@ func (c *client) reconnect() {
 		return
 	}
 
-	c.inboundFromStore = make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaitring processing
-	if c.startCommsWorkers(conn, c.inboundFromStore) {
-		c.resume(c.options.ResumeSubs, c.inboundFromStore)
+	inboundFromStore := make(chan packets.ControlPacket) // there may be some inbound comms packets in the store that are awaitring processing
+	if c.startCommsWorkers(conn, inboundFromStore) {
+		c.resume(c.options.ResumeSubs, inboundFromStore)
 	}
-	close(c.inboundFromStore)
+	close(inboundFromStore)
 }
 
 // attemptConnection makes a single attempt to connect to each of the brokers
@@ -412,7 +412,6 @@ func (c *client) Disconnect(quiesce uint) {
 		dm := packets.NewControlPacket(packets.Disconnect).(*packets.DisconnectPacket)
 		dt := newToken(packets.Disconnect)
 		c.oboundP <- &PacketAndToken{p: dm, t: dt}
-		c.inboundFromStore <- dm
 
 		// wait for work to finish, or quiesce time consumed
 		DEBUG.Println(CLI, "calling WaitTimeout")
