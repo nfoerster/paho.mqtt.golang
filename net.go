@@ -16,6 +16,7 @@ package mqtt
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"reflect"
@@ -123,15 +124,18 @@ func startIncoming(conn io.Reader) <-chan inbound {
 					ibound <- inbound{err: err}
 				}
 				close(ibound)
-				DEBUG.Println(NET, "incoming complete")
+				DEBUG.Println(CLI, "incoming complete")
 				return
 			}
 			//handle regular disconnect
 			_, ok := cp.(*packets.DisconnectPacket)
 			if ok {
-				DEBUG.Println(NET, "disconnect received")
+				DEBUG.Println(CLI, "disconnect received")
 				close(ibound)
 				return
+			} else {
+				DEBUG.Println(CLI, fmt.Sprintf("%+v", cp))
+
 			}
 
 			DEBUG.Println(NET, "startIncoming Received Message")
