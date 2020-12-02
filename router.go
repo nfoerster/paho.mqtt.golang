@@ -133,7 +133,7 @@ func (r *router) setDefaultHandler(handler MessageHandler) {
 // anything is sent down the stop channel the function will end.
 func (r *router) matchAndDispatch(messages <-chan *packets.PublishPacket, order bool, client *client) {
 	for message := range messages {
-		DEBUG.Println(ROU, "matchAndDispatch received message")
+		//DEBUG.Println(ROU, "matchAndDispatch received message")
 		sent := false
 		r.RLock()
 		m := messageFromPublish(message, ackFunc(client.oboundP, client.persist, message))
@@ -171,7 +171,7 @@ func (r *router) matchAndDispatch(messages <-chan *packets.PublishPacket, order 
 			handler(client, m)
 			m.Ack()
 		}
-		DEBUG.Println(ROU, "matchAndDispatch handled message")
+		//DEBUG.Println(ROU, "matchAndDispatch handled message")
 	}
 	DEBUG.Println(ROU, "matchAndDispatch exiting")
 }
