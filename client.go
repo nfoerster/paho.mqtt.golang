@@ -546,6 +546,7 @@ func (c *client) startCommsWorkers(conn net.Conn, inboundFromStore <-chan packet
 			case pub, ok := <-commsIncommingPub:
 				if !ok {
 					// Incomming comms has shutdown
+					DEBUG.Println(CLI, "close incoming channel")
 					close(incomingPubChan) // stop the router
 					commsIncommingPub = nil
 					continue
